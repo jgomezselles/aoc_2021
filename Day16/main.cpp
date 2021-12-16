@@ -147,7 +147,7 @@ std::vector<size_t> extract_operator(std::string &str)
     return subpackets;
 }
 
-void part_1()
+void solve()
 {
     const auto t_start = std::chrono::high_resolution_clock::now();
     auto input = read_input();
@@ -171,14 +171,8 @@ void part_1()
     return;
 }
 
-void part_2()
-{
-    return;
-}
-
 int main()
 {
-    part_1();
-    part_2();
+    solve();
     return 0;
 }
