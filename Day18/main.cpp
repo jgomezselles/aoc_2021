@@ -94,7 +94,7 @@ void explode(s_number &s, const s_number::iterator it)
     auto next_it = next_number(s, it + 2);
     if (next_it.has_value())
     {
-        **next_it = std::to_string(atoi(next_it.value()->c_str()) + atoi((it + 2)->c_str()));
+        **next_it = std::to_string(std::stoul(*next_it.value()) + std::stoul(*(it + 2)));
     }
 
     size_t zero_pos = it - 1 - s.begin();
@@ -225,7 +225,7 @@ std::vector<s_number> read_input_2()
     return s_numbers;
 }
 
-std::map<std::pair<size_t, size_t>, size_t>::iterator find_max_magnitude(const std::vector<s_number>& numbers)
+std::map<std::pair<size_t, size_t>, size_t>::iterator find_max_magnitude(const std::vector<s_number> &numbers)
 {
     std::map<std::pair<size_t, size_t>, size_t> magnitudes;
 
