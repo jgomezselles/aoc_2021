@@ -118,22 +118,13 @@ void reduce(s_number &s)
 {
     if (auto it = to_explode(s); it != s.end() && is_pair(s, it))
     {
-        print(s);
-        std::cout << "Explode " << *(it - 1) << *it << *(it + 1) << *(it + 2) << *(it + 3) << '\n';
-
         explode(s, it);
-        print(s);
-
         reduce(s);
     }
 
     if (auto it = std::ranges::find_if(s, to_split); it != s.end())
     {
-        print(s);
-        std::cout << "Split " << std::stoul(*it) << '\n';
         split(s, it);
-        print(s);
-
         reduce(s);
     }
 }
@@ -147,17 +138,9 @@ void add(s_number &n, const s_number &s)
     reduce(n);
 }
 
-struct c_number
-{
-    c_number(const std::string &line) : n(line_to_s_number(line)) {}
-    c_number(const s_number &s) : n(s) {}
-    void operator+=(const s_number &s) { add(n, s); };
-    s_number n;
-};
-
 s_number read_input()
 {
-    std::ifstream input("input.txt");
+    std::ifstream input("input_test.txt");
     if (!input)
     {
         std::cerr << "Cannot open the input.txt" << std::endl;
@@ -165,15 +148,14 @@ s_number read_input()
     }
     std::string next_line;
     getline(input, next_line);
-    c_number final_number(next_line);
-
+    s_number final_number = line_to_s_number(next_line);
     while (getline(input, next_line))
     {
-        final_number += line_to_s_number(next_line);
+        add(final_number, line_to_s_number(next_line));
     }
     input.close();
 
-    return final_number.n;
+    return final_number;
 }
 
 s_number::iterator inner_pair_comma(s_number &s)
@@ -204,11 +186,7 @@ size_t magnitude(s_number s)
 {
     while (s.size() > 1)
     {
-        print(s);
-        auto it = inner_pair_comma(s);
-        std::cout << "Magnitude " << *(it - 2) << *(it - 1) << *it << *(it + 1) << *(it + 2) << '\n';
-        explode_for_magnitude(s, it);
-        print(s);
+        explode_for_magnitude(s, inner_pair_comma(s));
     }
 
     return std::stoul(s.front());
@@ -237,28 +215,63 @@ std::vector<s_number> read_input_2()
         exit(1);
     }
     std::string next_line;
-    getline(input, next_line);
-    c_number final_number(next_line);
-
+    std::vector<s_number> s_numbers;
     while (getline(input, next_line))
     {
-        final_number += line_to_s_number(next_line);
+        s_numbers.push_back(line_to_s_number(next_line));
     }
     input.close();
 
-    return final_number.n;
+    return s_numbers;
+}
+
+std::map<std::pair<size_t, size_t>, size_t>::iterator find_max_magnitude(const std::vector<s_number>& numbers)
+{
+    std::map<std::pair<size_t, size_t>, size_t> magnitudes;
+
+    for (auto it = numbers.cbegin(); it != numbers.cend(); ++it)
+    {
+        for (auto jt = numbers.cbegin(); jt != numbers.cend(); ++jt)
+        {
+            const size_t i{size_t(it - numbers.cbegin())}, j{size_t(jt - numbers.begin())};
+            if (magnitudes.find({i, j}) == magnitudes.end())
+            {
+                auto a = *it;
+                add(a, *jt);
+                auto tmpmg = magnitude(a);
+                magnitudes[{i, j}] = tmpmg;
+            }
+
+            if (magnitudes.find({j, i}) == magnitudes.end())
+            {
+                auto a = *jt;
+                add(a, *it);
+                auto tmpmg = magnitude(a);
+                magnitudes[{j, i}] = tmpmg;
+            }
+        }
+    }
+
+    auto mg = std::max_element(magnitudes.begin(), magnitudes.end(),
+                               [](const std::pair<std::pair<size_t, size_t>, size_t> &p1,
+                                  const std::pair<std::pair<size_t, size_t>, size_t> &p2)
+                               { return p1.second < p2.second; });
+
+    return mg;
 }
 
 void part_2()
 {
     const auto t_start = std::chrono::high_resolution_clock::now();
-    auto final_line = read_input();
-    auto mg = magnitude(final_line);
+    const auto numbers = read_input_2();
+
+    const auto mg = find_max_magnitude(numbers);
 
     const auto t_stop = std::chrono::high_resolution_clock::now();
     const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t_stop - t_start);
 
-    std::cout << "Part 2: " << mg << '\n';
+    std::cout << "Part 2: "
+              << "Magnitude [" << mg->first.first << ',' << mg->first.second << "]: " << mg->second << '\n';
     std::cout << "It took " << duration.count() << "us \n";
     return;
 }
